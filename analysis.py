@@ -28,7 +28,8 @@ with open("log.csv", "r") as log:
 
             short_average = sum(an_array)/(len(an_array))
             long_average = sum(long_poll)/(len(long_poll))
-            outp.writerow([x, short_average, long_average, row[3]])
+            diff = short_average - long_average
+            outp.writerow([x, short_average, long_average, diff, row[3]])
             
             if len(an_array) > 10:
                 if (long_average - short_average) > 1 and x < -10:
