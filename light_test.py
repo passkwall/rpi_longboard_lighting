@@ -1,3 +1,7 @@
+'''
+Used for feeding a sample csv file from analysis.py and test light triggering thresholds
+'''
+
 import RPi.GPIO as GPIO
 from gpiozero import Button
 import time

@@ -4,7 +4,6 @@ import time
 import adafruit_adxl34x
 import board
 import busio
-import csv
 i2c = busio.I2C(board.SCL, board.SDA)
 accelerometer = adafruit_adxl34x.ADXL345(i2c)
 #1 side//side
@@ -12,38 +11,39 @@ accelerometer = adafruit_adxl34x.ADXL345(i2c)
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(18,GPIO.OUT)
-
-button_pressed = Button(23)
+GPIO.setwarnings(False)
 GPIO.output(18,GPIO.LOW)
 
-class Record_mode:
-    def __init__(self):
-        self.record = False
+button_pressed = Button(23)
 
-    def toggle_record(self, button):
-        if self.record == True and button == True:
-            self.record = False
-        elif self.record == False and button == True:
-            self.record = True
-    
-    
-rec_mode = Record_mode()
 
-file_name = str(time.time()) + "_log.csv"
-with open("log.csv", mode='r') as log_file:
+while True:
 
-    while True:
-        button = button_pressed.wait_for_press()
-        rec_mode.toggle_record(button)
+    x = accelerometer.acceleration[0]
+    y = accelerometer.acceleration[1]
+    z = accelerometer.acceleration[2]
 
-        while rec_mode.record == True:
-            GPIO.setwarnings(False)
-            GPIO.setup(18,GPIO.OUT)
-            GPIO.output(18,GPIO.HIGH)
+    long_poll = []
+    short_poll = []
 
-            csv_writer = csv.writer(log_file)
-            x = accelerometer.acceleration[0]
-            y = accelerometer.acceleration[1]
-            z = accelerometer.acceleration[2]
-                            
-            csv_writer.writerow([x,y,z, time.time()])
+    if len(short_poll) > 10:
+        short_poll.pop(0)
+        short_poll.append(x)
+    else:
+        short_poll.append(x)
+
+    if len(long_poll) > 100:
+        long_poll.pop(0)
+        long_poll.append(x)
+    else:
+        long_poll.append(x)
+
+    short_average = sum(an_array)/(len(an_array))
+    long_average = sum(long_poll)/(len(long_poll))
+    diff = short_average - long_average
+
+    if diff > 1:
+        GPIO.output(18,GPIO.HIGH)
+        print("Braking!")
+        GPIO.output(18,GPIO.LOW)
+        time.sleep(1)
